@@ -1,3 +1,5 @@
+#!python3
+
 import time
 import requests
 import json
@@ -86,7 +88,7 @@ def create_group_in_snipeit(authentication_file, group_name, verbose=False):
         "content-type": "application/json",
     }
 
-    print(f"checking for group {group_name}")
+    # print(f"checking for group {group_name}")
 
     if group_name in group_mapping:
         return
@@ -175,7 +177,7 @@ def get_snipeit_user_id_mapping(authentication_file):
     }
     return mapping
 
-def set_snipeit_user_groups(authentication_file, user):
+def set_snipeit_user_groups(authentication_file, user, write_skipped=True):
     group_id_mapping = get_snipeit_group_id_mapping(authentication_file)
     user_id_mapping = get_snipeit_user_id_mapping(authentication_file)
 
@@ -184,8 +186,9 @@ def set_snipeit_user_groups(authentication_file, user):
         user_id = user_id_mapping[username]
     except KeyError:
         print(f"user {username} not found, skipping")
-        with open("skipped", "a") as f:
-            f.write(username+"\n")
+        if write_skipped:
+            with open("skipped", "a+") as f:
+                f.write(username+"\n")
         return
     groups = user[username]
     group_ids = [group_id_mapping[group] for group in groups]
@@ -225,8 +228,11 @@ def set_snipeit_user_groups(authentication_file, user):
     pass
 
 if __name__ == "__main__":
-    with open("skipped", "w") as f:
-        pass
+    write_skipped = False
+
+    if write_skipped:
+        with open("skipped", "w") as f:
+            pass
 
     authentik_groups = get_groups_from_authentik("auth/authentik")
     authentik_users = get_users_from_groups(authentik_groups)
@@ -235,4 +241,4 @@ if __name__ == "__main__":
         create_group_in_snipeit("auth/snipeit", group["name"])
 
     for user in authentik_users:
-        set_snipeit_user_groups("auth/snipeit", user)
+        set_snipeit_user_groups("auth/snipeit", user, write_skipped)
