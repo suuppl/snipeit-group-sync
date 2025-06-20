@@ -1,0 +1,1 @@
+# snipeit-ldap-group-sync
